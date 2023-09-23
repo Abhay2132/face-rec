@@ -42,6 +42,7 @@ def recognize_faces(
     
     del draw
     pillow_image.save("test/known.jpg")
+    print("Result image saved in test/known.jpg")
     # pillow_image.show()
 
 def _recognize_face(unknown_encoding, loaded_encodings):
