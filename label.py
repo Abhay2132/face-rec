@@ -41,7 +41,7 @@ def recognize_faces(
         _display_face(draw, bounding_box, name)
     
     del draw
-    pillow_image.save("test.jpg")
+    pillow_image.save("test/known.jpg")
     # pillow_image.show()
 
 def _recognize_face(unknown_encoding, loaded_encodings):
@@ -74,4 +74,4 @@ def _display_face(draw, bounding_box, name):
     )
 
 
-recognize_faces("unknown.jpg")
+recognize_faces("test/unknown.jpg")
