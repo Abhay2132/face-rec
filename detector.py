@@ -27,7 +27,7 @@ def encode_known_faces(
 
     name_encodings = {"names": names, "encodings": encodings}
 
-    print("name_encodings", name_encodings)
+    # print("name_encodings", name_encodings)
     with encodings_location.open(mode="wb") as f:
         pickle.dump(name_encodings, f)
 

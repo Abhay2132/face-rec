@@ -3,6 +3,7 @@ import face_recognition
 import pickle
 from collections import Counter
 from PIL import Image, ImageDraw
+import sys
 
 DEFAULT_ENCODINGS_PATH = Path("output/encodings.pkl")
 BOUNDING_BOX_COLOR = "blue"
@@ -10,6 +11,7 @@ TEXT_COLOR = "white"
 
 def recognize_faces(
     image_location: str,
+    output_location:str,
     model: str = "hog",
     encodings_location: Path = DEFAULT_ENCODINGS_PATH
 ) -> None:
@@ -41,7 +43,7 @@ def recognize_faces(
         _display_face(draw, bounding_box, name)
     
     del draw
-    pillow_image.save("test/known.jpg")
+    pillow_image.save(output_location)
     print("Result image saved in test/known.jpg")
     # pillow_image.show()
 
@@ -74,5 +76,10 @@ def _display_face(draw, bounding_box, name):
         fill="white",
     )
 
-
-recognize_faces("test/unknown.jpg")
+if(len(sys.argv) >= 3) :
+    source = sys.argv[1]
+    output = sys.argv[2]
+    print(f"source : {source} , output : {output}")
+    recognize_faces(source, output)
+else :
+    print("Error : not enough arguments !")
