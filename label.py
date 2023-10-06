@@ -4,6 +4,7 @@ import pickle
 from collections import Counter
 from PIL import Image, ImageDraw
 import sys
+import time
 
 DEFAULT_ENCODINGS_PATH = Path("output/encodings.pkl")
 BOUNDING_BOX_COLOR = "blue"
@@ -32,15 +33,27 @@ def recognize_faces(
     pillow_image = Image.fromarray(input_image)
     draw = ImageDraw.Draw(pillow_image)
 
+    detected_faces = []
     # Finding Multiple faces in the image
     for bounding_box, unknown_encoding in zip(
     input_face_locations, input_face_encodings
     ):
+        t1 = time.time()
         name = _recognize_face(unknown_encoding, loaded_encodings)
+        t2 = time.time()
+
+        if(name != "unknown"):
+            if(name in detected_faces):
+                name = "unknown"
+            else:
+                detected_faces.append(name)
+        
+        # tt = ("%.4f" % ((t2-t1)))
+        print(f"{name} : {t2 - t1}s")
         if not name:
             name = "Unknown"
         # print(name, bounding_box)
-        _display_face(draw, bounding_box, name)
+        _display_face(draw, bounding_box, name, name == "abhay" if "red" else "blue")
     
     del draw
     pillow_image.save(output_location)
@@ -59,16 +72,16 @@ def _recognize_face(unknown_encoding, loaded_encodings):
     if votes:
         return votes.most_common(1)[0][0]
 
-def _display_face(draw, bounding_box, name):
+def _display_face(draw, bounding_box, name, clr=BOUNDING_BOX_COLOR):
     top, right, bottom, left = bounding_box
-    draw.rectangle(((left, top), (right, bottom)), outline=BOUNDING_BOX_COLOR)
+    draw.rectangle(((left, top), (right, bottom)), outline=clr)
     text_left, text_top, text_right, text_bottom = draw.textbbox(
         (left, bottom), name
     )
     draw.rectangle(
         ((text_left, text_top), (text_right, text_bottom)),
-        fill="blue",
-        outline="blue",
+        fill=clr,
+        outline=clr,
     )
     draw.text(
         (text_left, text_top),
