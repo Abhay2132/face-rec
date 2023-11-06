@@ -59,15 +59,21 @@ class FaceAPI:
             person = (-1, "unknown")
 
             face_distances = face_recognition.face_distance(known_face_encoding, face_encoding)
-            best_match_index = np.argmin(face_distances)
-            if matches[best_match_index]:
+            # return print(face_distances)
+            if len(face_distances) == 0:
+                continue
+            best_match_index = len(face_distances) > 0 if np.argmin(face_distances) else False
+            if best_match_index and matches[best_match_index]:
                 person = savedEncoding["persons"][best_match_index]
 
             persons.append(person)
 
-        # pillow_image = Image.fromarray(frame)
-        # draw = ImageDraw.Draw(pillow_image)
+        # FaceAPI.drawBox(frame, face_locations, persons)
+        # del draw
+        return (persons, face_locations)
 
+    @staticmethod
+    def drawBox(frame, face_locations, persons):
         for (top, right, bottom, left), person in zip(face_locations, persons):
             top *= 4
             right *= 4
@@ -76,27 +82,10 @@ class FaceAPI:
 
             id, name = person
 
-            # clr = name == "unknown" if "red" else "green"
-            # draw.rectangle(((left, top), (right, bottom)), outline=clr)
-            # text_left, text_top, text_right, text_bottom = draw.textbbox((left, bottom), name)
-            # draw.rectangle(
-            #     ((text_left, text_top), (text_right, text_bottom)),
-            #     fill=clr,
-            #     outline=clr,
-            # )
-            # draw.text(
-            #     (text_left, text_top),
-            #     name,
-            #     fill="white",
-            # )
-
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
             cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
-        
-        # del draw
-        return (frame, persons)
 
     @staticmethod
     def saveImage(dest , image):

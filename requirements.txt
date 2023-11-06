@@ -5,3 +5,4 @@ Pillow==9.4.0
 customtkinter
 packaging
 opencv-python
+customtkinter
