@@ -11,7 +11,7 @@ def processFunc (shm):
 
 if __name__ == "__main__":
     # shm = mp.SharedMemory(name="my_shm")
-    shm = shared_memory.SharedMemory(create=True, size=)
+    shm = shared_memory.SharedMemory(create=True, size=1024)
     shm.buf[:] = pickle.dumps({"val" : 1})
 
     p1 = mp.Process(target=processFunc, args=(shm,))

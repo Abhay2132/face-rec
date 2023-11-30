@@ -2,29 +2,32 @@ import sys
 import threading
 import time
 import customtkinter as ctk
+
+import faceAPI.mainAPI
 import ui_
 from PIL import Image
 import cv2
 from pathlib import Path
-from multiprocessing import Array , Process
+from multiprocessing import Array, Process
 
 sys.path.append("faceAPI")
 from faceAPI import mainAPI
 
 width, height = 800, 600
 
-
-# Set the width and height 
+# faceAPI.mainAPI.SavedEncoding.encode_known_encoding()
+# Set the width and height
 
 class App(ctk.CTk):
-    cam_h, cam_w = 800, 200
+    cam_h, cam_w = height, width
     lastTime = 0
     lastFpsTick = 0
     data = {"persons": [], "face_locations": []}
     lastFrame = False
     kill = False
+    arr = [0, 0]
 
-    sharedArr = Array('i')
+    # sharedArr = Array('i')
     faceAPIProcess = False
 
     def stopThread(self):
@@ -35,7 +38,7 @@ class App(ctk.CTk):
         super().__init__()
 
         self.protocol("WM_DELETE_WINDOW", self.stopThread)
-        self.geometry("800x400")
+        self.geometry(str(width) + "x" + str(height))
         self.title("Abhay")
 
         self.mainFrame = ui_.MainFrame(self)
@@ -57,11 +60,11 @@ class App(ctk.CTk):
 
     def initCamera(self):
         self.cap = cv2.VideoCapture(0)
+        self.update()
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        self.update()
         mainAPI.FaceAPI.init()
-        # self.faceAPIThread = threading.Thread(target=App.identifyFaces, args=(self,))
+        # self.faceAPIThread = threading.Thread(target=App.identifyFaces, args=(self,), daemon=True)
         # self.faceAPIThread.start()
 
     def updateFPS(self):
@@ -83,10 +86,20 @@ class App(ctk.CTk):
             try:
                 frame = cv2.flip(frame, 1)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                # (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
+
+                # self.arr[0] = frame
+                (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
+                # self.data = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
+
                 self.lastFrame = frame
-                if len(self.data["face_locations"]) > 0:
-                    mainAPI.FaceAPI.drawBox(frame, self.data["face_locations"], self.data["persons"])
+
+                if(len(persons) > 0):
+                    mainAPI.FaceAPI.drawBox(frame, face_locations, persons)
+                # if len(self.data["face_locations"]) > 0:
+                #     mainAPI.FaceAPI.drawBox(frame, self.data["face_locations"], self.data["persons"])
+
+                # if self.arr[1] and len(self.arr[1][0]) > 0:
+                #     mainAPI.FaceAPI.drawBox(frame, self.arr[1][1], self.arr[1][0])
 
                 image = Image.fromarray(frame)
                 image_obj = ctk.CTkImage(image, size=(self.cam_w, int(self.cam_h)))
@@ -101,12 +114,14 @@ class App(ctk.CTk):
             self.quit()
 
     @staticmethod
-    def identifyFaces(arr):
-        while (not arr[2]):
-            frame = arr[0]
+    def identifyFaces(me):
+        while (not me.kill):
+            if not me.arr[0] :
+                continue
+            frame = me.arr[0]
             (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
-            arr[1] = (persons, face_locations)
-            # time.sleep(0.01)
+            me.arr[1] = (persons, face_locations)
+            time.sleep(0.01)
 
     def on_resize(self, event):
         # screen_height = event.height
