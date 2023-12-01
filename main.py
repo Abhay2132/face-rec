@@ -59,11 +59,11 @@ class App(ctk.CTk):
         self.bind("<Configure>", self.on_resize)
 
     def initCamera(self):
-        # self.cap = cv2.VideoCapture(0)
-        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        # mainAPI.FaceAPI.init()
-        # self.update()
+        self.cap = cv2.VideoCapture(0)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        mainAPI.FaceAPI.init()
+        self.update()
         return 0
 
     def updateFPS(self):
@@ -79,7 +79,7 @@ class App(ctk.CTk):
         self.updateFPS()
         self.lastTime = time.time()
 
-        return 0
+        # return 0
         ret, frame = self.cap.read()
 
         if ret:
@@ -87,9 +87,9 @@ class App(ctk.CTk):
                 frame = cv2.flip(frame, 1)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                # (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
-                # if(len(persons) > 0):
-                #     mainAPI.FaceAPI.drawBox(frame, face_locations, persons)
+                (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
+                if(len(persons) > 0):
+                    mainAPI.FaceAPI.drawBox(frame, face_locations, persons)
 
                 image = Image.fromarray(frame)
                 image_obj = ctk.CTkImage(image, size=(self.cam_w, int(self.cam_h)))
