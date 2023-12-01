@@ -23,20 +23,20 @@ def setData(d):
     d['data'] = ([],[])
 
 
-def identifyFaces(dict):
+def identifyFaces(_dict):
     from faceAPI import mainAPI
 
     while True:
         time.sleep(0.004)
-        print("bg:", dict['frame_processed'])
-        if dict['kill']:
+        print("bg:", _dict['frame_processed'], ", data:", _dict['data'])
+        if _dict['kill']:
             break
-        if len(dict['frame']) < 1 or (dict['frame_processed']) :
+        if len(_dict['frame']) < 1 or (_dict['frame_processed']) :
             continue
 
-        frame = dict['frame']
-        dict['data'] = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
-        dict['frame_processed'] = True
+        frame = _dict['frame']
+        _dict['data'] = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
+        _dict['frame_processed'] = True
 
 class App(ctk.CTk):
     cam_h, cam_w = height, width
@@ -81,9 +81,9 @@ class App(ctk.CTk):
         self.bind("<Configure>", self.on_resize)
 
         self.manager = Manager()
-        self.dict = self.manager.dict()
-        setData(self.dict)
-        self.process = Process(target=identifyFaces, args=(self.dict,))
+        self._dict = self.manager.dict()
+        setData(self._dict)
+        self.process = Process(target=identifyFaces, args=(self._dict,))
 
     def initCamera(self):
         self.cap = cv2.VideoCapture(0)
@@ -115,20 +115,20 @@ class App(ctk.CTk):
             try:
                 frame = cv2.flip(frame, 1)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                self.dict['frame'] = frame
+                self._dict['frame'] = frame
 
-                # print(self.dict)
-                print("fg:", dict['frame_processed'])
+                # print(self._dict)
+                print("fg:", self._dict['frame_processed'], "data:", self._dict['data'])
 
-                if(self.dict["frame_processed"]):
-                    self.dict["frame_processed"] = False
-                    self.dict["frame"] = frame
-                    self.lastLocations = self.dict['data']
+                if(self._dict["frame_processed"]):
+                    self._dict["frame_processed"] = False
+                    self._dict["frame"] = frame
+                    self.lastLocations = self._dict['data']
 
                 # (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
                 (persons, face_locations) = self.lastLocations
 
-                if(len(persons) > 0):
+                if(len(face_locations) > 0):
                     mainAPI.FaceAPI.drawBox(frame, face_locations, persons)
 
                 image = Image.fromarray(frame)
