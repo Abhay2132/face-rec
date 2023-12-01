@@ -8,15 +8,35 @@ import ui_
 from PIL import Image
 import cv2
 from pathlib import Path
-from multiprocessing import Array, Process
+from multiprocessing import Array, Process, Manager
 
 sys.path.append("faceAPI")
 from faceAPI import mainAPI
 
 width, height = 800, 600
 
-# faceAPI.mainAPI.SavedEncoding.encode_known_encoding()
-# Set the width and height
+
+def setData(d):
+    d['kill'] = False
+    d['frame_processed'] = False
+    d['frame'] = []
+    d['data'] = ([],[])
+
+
+def identifyFaces(dict):
+    from faceAPI import mainAPI
+
+    while True:
+        time.sleep(0.004)
+        print("bg:", dict['frame_processed'])
+        if dict['kill']:
+            break
+        if len(dict['frame']) < 1 or (dict['frame_processed']) :
+            continue
+
+        frame = dict['frame']
+        dict['data'] = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
+        dict['frame_processed'] = True
 
 class App(ctk.CTk):
     cam_h, cam_w = height, width
@@ -26,9 +46,11 @@ class App(ctk.CTk):
     lastFrame = False
     kill = False
     arr = [0, 0]
+    frameRatio = 9/16
 
     # sharedArr = Array('i')
     faceAPIProcess = False
+    lastLocations = ([], []) # (persons[], face_locations[])
 
     def stopThread(self):
         self.kill = True
@@ -36,7 +58,7 @@ class App(ctk.CTk):
 
     def __init__(self):
         super().__init__()
-
+        
         self.protocol("WM_DELETE_WINDOW", self.stopThread)
         self.geometry(str(width) + "x" + str(height))
         self.title("Abhay")
@@ -58,11 +80,17 @@ class App(ctk.CTk):
 
         self.bind("<Configure>", self.on_resize)
 
+        self.manager = Manager()
+        self.dict = self.manager.dict()
+        setData(self.dict)
+        self.process = Process(target=identifyFaces, args=(self.dict,))
+
     def initCamera(self):
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         mainAPI.FaceAPI.init()
+        self.process.start()
         self.update()
         return 0
 
@@ -82,12 +110,24 @@ class App(ctk.CTk):
         # return 0
         ret, frame = self.cap.read()
 
+        self.frameRatio = frame.shape[0]/frame.shape[1]
         if ret:
             try:
                 frame = cv2.flip(frame, 1)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                self.dict['frame'] = frame
 
-                (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
+                # print(self.dict)
+                print("fg:", dict['frame_processed'])
+
+                if(self.dict["frame_processed"]):
+                    self.dict["frame_processed"] = False
+                    self.dict["frame"] = frame
+                    self.lastLocations = self.dict['data']
+
+                # (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
+                (persons, face_locations) = self.lastLocations
+
                 if(len(persons) > 0):
                     mainAPI.FaceAPI.drawBox(frame, face_locations, persons)
 
@@ -101,24 +141,11 @@ class App(ctk.CTk):
         else:
             self.cap.release()
             self.mainFrame.label.destroy()
-            self.quit()
-
-    @staticmethod
-    def identifyFaces(me):
-        while (not me.kill):
-            if not me.arr[0] :
-                continue
-            frame = me.arr[0]
-            (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
-            me.arr[1] = (persons, face_locations)
-            time.sleep(0.01)
+            self.quit()            
 
     def on_resize(self, event):
-        # screen_height = event.height
-        # screen_width = event.width
-        # width = screen_width - 300
         w = self.mainFrame.winfo_width()
-        h = 9 / 16 * w
+        h = self.frameRatio * w
 
         self.cam_h = h
         self.cam_w = w
