@@ -9,5 +9,5 @@ def read():
         print(loaded_encodings)
 
 print("Training on Images")
-mainAPI.SavedEncoding.trainModel("hog")
+mainAPI.SavedEncoding.trainModel("cnn")
 read()

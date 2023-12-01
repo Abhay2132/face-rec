@@ -63,6 +63,7 @@ class SavedEncoding :
             name = "_".join(dirname[:-1])
             _id = dirname[-1]
 
+            print(_id, name)
             face_locations = face_recognition.face_locations(image, model=model)
             face_encodings = face_recognition.face_encodings(image, face_locations)
 
@@ -74,6 +75,7 @@ class SavedEncoding :
         name_encodings = {"persons" : persons, "encodings":encodings}
 
         # print("name_encodings", name_encodings)
+        os.remove(encodings_location)
         with encodings_location.open(mode="wb") as f:
             pickle.dump(name_encodings, f)
 

@@ -21,9 +21,8 @@ def identify():
     return 0
 
 
+mainAPI.SavedEncoding.trainModel("cnn")
 mainAPI.FaceAPI.init()
-mainAPI.SavedEncoding.trainModel()
-
 
 # print(main.SavedEncoding.encodings)
 
