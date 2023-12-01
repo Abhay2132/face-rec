@@ -15,16 +15,24 @@ Path(os.path.join(cwd,"output")).mkdir(exist_ok=True)
 Path(os.path.join(cwd,"validation")).mkdir(exist_ok=True)
 
 class SavedEncoding :
+    encodingsLoaded = False
     encodings = {"persons": [], "encodings": []}
     # { persons : [(person_id, person_name)]  , encodings : [NDArray] }
 
     @staticmethod
+    def getPersons():
+        if not SavedEncoding.encodingsLoaded:
+            SavedEncoding.loadEncoding()
+
+        return SavedEncoding.encodings["persons"]
+    @staticmethod
     def loadEncoding(encodings_location : Path = DEFAULT_ENCODINGS_PATH):
-        # SavedEncoding.encode_known_encoding()
+        # SavedEncoding.trainModel()
         if not os.path.isfile(encodings_location) :
             return
         with encodings_location.open(mode="rb") as f:
             SavedEncoding.encodings = pickle.load(f)
+        SavedEncoding.encodingsLoaded = True
 
     @staticmethod
     def saveEncoding(output_loc:Path=DEFAULT_ENCODINGS_PATH):
@@ -40,8 +48,9 @@ class SavedEncoding :
     def getEncodings():
         return SavedEncoding.encodings
 
-    def encode_known_encoding(
-            model: str = "hog", encodings_location: Path = DEFAULT_ENCODINGS_PATH
+    @staticmethod
+    def trainModel(
+            model: str = "cnn", encodings_location: Path = DEFAULT_ENCODINGS_PATH
     ) -> None:
         # names = []
         persons  = []

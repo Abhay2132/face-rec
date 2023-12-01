@@ -59,13 +59,12 @@ class App(ctk.CTk):
         self.bind("<Configure>", self.on_resize)
 
     def initCamera(self):
-        self.cap = cv2.VideoCapture(0)
-        self.update()
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        mainAPI.FaceAPI.init()
-        # self.faceAPIThread = threading.Thread(target=App.identifyFaces, args=(self,), daemon=True)
-        # self.faceAPIThread.start()
+        # self.cap = cv2.VideoCapture(0)
+        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        # mainAPI.FaceAPI.init()
+        # self.update()
+        return 0
 
     def updateFPS(self):
         now = time.time()
@@ -80,6 +79,7 @@ class App(ctk.CTk):
         self.updateFPS()
         self.lastTime = time.time()
 
+        return 0
         ret, frame = self.cap.read()
 
         if ret:
@@ -87,19 +87,9 @@ class App(ctk.CTk):
                 frame = cv2.flip(frame, 1)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                # self.arr[0] = frame
-                (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
-                # self.data = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
-
-                self.lastFrame = frame
-
-                if(len(persons) > 0):
-                    mainAPI.FaceAPI.drawBox(frame, face_locations, persons)
-                # if len(self.data["face_locations"]) > 0:
-                #     mainAPI.FaceAPI.drawBox(frame, self.data["face_locations"], self.data["persons"])
-
-                # if self.arr[1] and len(self.arr[1][0]) > 0:
-                #     mainAPI.FaceAPI.drawBox(frame, self.arr[1][1], self.arr[1][0])
+                # (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
+                # if(len(persons) > 0):
+                #     mainAPI.FaceAPI.drawBox(frame, face_locations, persons)
 
                 image = Image.fromarray(frame)
                 image_obj = ctk.CTkImage(image, size=(self.cam_w, int(self.cam_h)))

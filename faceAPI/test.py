@@ -22,7 +22,7 @@ def identify():
 
 
 mainAPI.FaceAPI.init()
-# mainAPI.SavedEncoding.encode_known_encoding()
+mainAPI.SavedEncoding.trainModel()
 
 
 # print(main.SavedEncoding.encodings)
