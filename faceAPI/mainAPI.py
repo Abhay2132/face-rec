@@ -52,10 +52,9 @@ class SavedEncoding :
     def trainModel(
             model: str = "cnn", encodings_location: Path = DEFAULT_ENCODINGS_PATH
     ) -> None:
-        # names = []
         persons  = []
         encodings = []
-        for filepath in Path("training").glob("*/*"):
+        for filepath in Path(os.path.join(cwd,"training")).glob("*/*"):
             # name = filepath.parent.name
             # image = face_recognition.load_image_file(filepath)
             dirname = filepath.parent.name.split("_")
@@ -64,7 +63,7 @@ class SavedEncoding :
             _id = dirname[-1]
 
             print(_id, name)
-            face_locations = face_recognition.face_locations(image, model=model)
+            face_locations = face_recognition.face_locations(image, 2,model=model)
             face_encodings = face_recognition.face_encodings(image, face_locations)
 
             for encoding in face_encodings:
@@ -75,7 +74,8 @@ class SavedEncoding :
         name_encodings = {"persons" : persons, "encodings":encodings}
 
         # print("name_encodings", name_encodings)
-        os.remove(encodings_location)
+        if os.path.exists(encodings_location) :
+            os.remove(encodings_location)
         with encodings_location.open(mode="wb") as f:
             pickle.dump(name_encodings, f)
 
@@ -92,19 +92,21 @@ class FaceAPI:
 
         rgb_small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
         # rgb_small_frame = small_frame[:, :, ::-1]
-        face_locations = face_recognition.face_locations(rgb_small_frame)
+        face_locations = face_recognition.face_locations(rgb_small_frame, 2)
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
         persons = []
         known_face_encoding = savedEncoding["encodings"]
         # print(f"known_face_encoding : {known_face_encoding}")
         for face_encoding in face_encodings :
+            # print(face_encoding)
             matches = face_recognition.compare_faces(known_face_encoding, face_encoding)
             person = (-1, "unknown")
 
             face_distances = face_recognition.face_distance(known_face_encoding, face_encoding)
             # return print(face_distances)
             if len(face_distances) == 0:
+                persons.append(person)
                 continue
             best_match_index = len(face_distances) > 0 if np.argmin(face_distances) else False
             if best_match_index and matches[best_match_index]:
@@ -125,6 +127,7 @@ class FaceAPI:
             left *= 4
             bottom += 35
 
+            print("drawing box : ", persons)
             id, name = person
 
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)

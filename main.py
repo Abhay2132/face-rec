@@ -25,6 +25,7 @@ def setData(d):
 
 def identifyFaces(_dict):
     from faceAPI import mainAPI
+    mainAPI.FaceAPI.init()
 
     while True:
         time.sleep(0.004)
@@ -35,7 +36,10 @@ def identifyFaces(_dict):
             continue
 
         frame = _dict['frame']
-        _dict['data'] = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
+        persons, locs = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
+        if len(locs) > 0:
+            _dict['data'] = (persons, locs)
+        print(persons, locs)
         _dict['frame_processed'] = True
 
 class App(ctk.CTk):
@@ -118,16 +122,17 @@ class App(ctk.CTk):
                 self._dict['frame'] = frame
 
                 # print(self._dict)
-                print("fg:", self._dict['frame_processed'], "data:", self._dict['data'])
 
                 if(self._dict["frame_processed"]):
-                    self._dict["frame_processed"] = False
+                    print("fg:", self._dict['frame_processed'], "data:", self._dict['data'])
                     self._dict["frame"] = frame
                     self.lastLocations = self._dict['data']
+                    self._dict["frame_processed"] = False
 
                 # (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
                 (persons, face_locations) = self.lastLocations
 
+                print(f"Persons:{persons},locs:{face_locations}")
                 if(len(face_locations) > 0):
                     mainAPI.FaceAPI.drawBox(frame, face_locations, persons)
 
