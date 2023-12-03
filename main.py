@@ -2,7 +2,7 @@ import sys
 import threading
 import time
 import customtkinter as ctk
-
+import addUser
 import faceAPI.mainAPI
 import ui_
 from PIL import Image
@@ -29,7 +29,7 @@ def identifyFaces(_dict):
 
     while True:
         time.sleep(0.004)
-        print("bg:", _dict['frame_processed'], ", data:", _dict['data'])
+        # print("bg:", _dict['frame_processed'], ", data:", _dict['data'])
         if _dict['kill']:
             break
         if len(_dict['frame']) < 1 or (_dict['frame_processed']) :
@@ -39,7 +39,7 @@ def identifyFaces(_dict):
         persons, locs = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
         if len(locs) > 0:
             _dict['data'] = (persons, locs)
-        print(persons, locs)
+        # print(persons, locs)
         _dict['frame_processed'] = True
 
 class App(ctk.CTk):
@@ -55,6 +55,10 @@ class App(ctk.CTk):
     # sharedArr = Array('i')
     faceAPIProcess = False
     lastLocations = ([], []) # (persons[], face_locations[])
+
+    def openNewUserDialog(self):
+        self.newUserDialog = addUser.App(self.cap)
+        self.newUserDialog.mainloop()
 
     def stopThread(self):
         self.kill = True
@@ -82,10 +86,12 @@ class App(ctk.CTk):
         self.leftFrame.grid(row=0, padx=padx, pady=pady, column=0, sticky="nswe")
         self.rightFrame.grid(row=0, padx=padx, pady=pady, column=2, sticky="nswe")
 
+        self.leftFrame.newUserBtn.configure(command=self.openNewUserDialog)
         self.bind("<Configure>", self.on_resize)
 
         self.manager = Manager()
         self._dict = self.manager.dict()
+
         setData(self._dict)
         self.process = Process(target=identifyFaces, args=(self._dict,))
 
@@ -132,7 +138,7 @@ class App(ctk.CTk):
                 # (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
                 (persons, face_locations) = self.lastLocations
 
-                print(f"Persons:{persons},locs:{face_locations}")
+                # print(f"Persons:{persons},locs:{face_locations}")
                 if(len(face_locations) > 0):
                     mainAPI.FaceAPI.drawBox(frame, face_locations, persons)
 

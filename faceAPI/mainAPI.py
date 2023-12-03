@@ -62,7 +62,7 @@ class SavedEncoding :
             name = "_".join(dirname[:-1])
             _id = dirname[-1]
 
-            print(_id, name)
+            # print(_id, name)
             face_locations = face_recognition.face_locations(image, 2,model=model)
             face_encodings = face_recognition.face_encodings(image, face_locations)
 
@@ -127,7 +127,7 @@ class FaceAPI:
             left *= 4
             bottom += 35
 
-            print("drawing box : ", persons)
+            # print("drawing box : ", persons)
             id, name = person
 
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)

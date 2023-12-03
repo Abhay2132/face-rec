@@ -8,7 +8,7 @@ from faceAPI import mainAPI
 
 class MainFrame(ctk.CTkFrame):
 	def __init__(self, master):
-		super().__init__(master)
+		super().__init__(master=master)
 
 		self.grid_columnconfigure(0, minsize=150, weight=1)
 		self.grid_rowconfigure(0, minsize=150, weight=1)
@@ -43,12 +43,9 @@ class LeftFrame(ctk.CTkFrame):
 		# List of Saved Users
 		self.userList = UserList(master=self)
 		self.userList.grid(row=3, column=0, sticky="ns")
-	# row = 3
-	# for (id, name) in self.users:
-	# 	newUser = UserItem(self, id, name, row)
-	# 	self.userItems.append(newUser)
-	# 	row += 1
 
+		self.newUserBtn = ctk.CTkButton(master=self, text="Add New User")
+		self.newUserBtn.grid(row=4, column=0, sticky='we' ,padx=20)
 
 class RightFrame(ctk.CTkFrame):
 	def __init__(self, master):
