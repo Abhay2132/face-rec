@@ -92,6 +92,8 @@ class App(ctk.CTkFrame):
 
         setData(self._dict)
         self.process = Process(target=identifyFaces, args=(self._dict,))
+        self.after(200, self.initCamera)
+
 
     def initCamera(self):
         self.cap = cv2.VideoCapture(0)
@@ -152,6 +154,9 @@ class App(ctk.CTkFrame):
             self.mainFrame.label.destroy()
             self.quit()            
 
+    def show(self):
+        self.grid(row=0, column=0, sticky="nswe")
+
     def on_resize(self, event):
         w = self.mainFrame.winfo_width()
         h = self.frameRatio * w
@@ -174,8 +179,7 @@ if __name__ == "__main__":
     root.grid_columnconfigure(0, weight=1)
 
     app = App(root)
-    app.grid(row=0, column=0, sticky="nswe")
+    app.show()
 
-    app.after(200, app.initCamera)
     
     root.mainloop()

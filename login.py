@@ -19,7 +19,8 @@ class Login(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
 
         super().__init__(master=master, fg_color="#fefefe")
-        
+        self._master = master
+
         self.logoFrame = LogoFrame(self)
         self.logoFrame.grid(row=0, column=0, padx=10, pady=10)
 
@@ -32,11 +33,17 @@ class Login(ctk.CTkFrame):
         self.submit = ctk.CTkButton(master=self, text='LOGIN', command=self.onSubmit)
         self.submit.grid(row=3, column=0, sticky='ns', padx=10, pady=10)
 
+    def onLogin(self):
+        return 0
+    
     def onSubmit(self):
         user = self.userInput.get()
         key = self.keyInput.get()
 
         print(f"user:'{user}',key:'{key}'")
+
+        if user == "Abhay" and key == "India":
+            self._master.onLogin()
     
     def show(self):
         self.grid(row=0, column=0)
