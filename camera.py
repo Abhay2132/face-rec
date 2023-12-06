@@ -13,13 +13,14 @@ from multiprocessing import Array, Process, Manager
 from datetime import datetime
 
 cwd = os.sep.join(__file__.split(os.sep)[:-1])
-Path(os.path.join(cwd,"reports")).mkdir(exist_ok=True)
+Path(os.path.join(cwd, "reports")).mkdir(exist_ok=True)
+
 
 # print("Current Time =", current_time)
 def getCurrentTime():
-	now = datetime.now()
-	current_time = now.strftime("%H:%M:%S")
-	return current_time
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    return current_time
 
 
 sys.path.append("faceAPI")
@@ -29,11 +30,13 @@ width, height = 800, 600
 
 cwd = os.sep.join(__file__.split(os.sep)[:-1])
 
+
 def setData(d):
     d['kill'] = False
     d['frame_processed'] = False
     d['frame'] = []
-    d['data'] = ([],[])
+    d['data'] = ([], [])
+
 
 def identifyFaces(_dict):
     from faceAPI import mainAPI
@@ -44,7 +47,7 @@ def identifyFaces(_dict):
         # print("bg:", _dict['frame_processed'], ", data:", _dict['data'])
         if _dict['kill']:
             break
-        if len(_dict['frame']) < 1 or (_dict['frame_processed']) :
+        if len(_dict['frame']) < 1 or (_dict['frame_processed']):
             continue
 
         frame = _dict['frame']
@@ -54,25 +57,27 @@ def identifyFaces(_dict):
         # print(persons, locs)
         _dict['frame_processed'] = True
 
-class App(ctk.CTkFrame):
 
+class App(ctk.CTkFrame):
     lastTime = 0
     lastFpsTick = 0
     data = {"persons": [], "face_locations": []}
     lastFrame = False
     kill = False
     arr = [0, 0]
-    frameRatio = 9/16
+    frameRatio = 9 / 16
     frameActive = True
 
     # sharedArr = Array('i')
     faceAPIProcess = False
-    lastLocations = ([], []) # (persons[], face_locations[])
+    lastLocations = ([], [])  # (persons[], face_locations[])
     savedPersons = set(mainAPI.SavedEncoding.getPersons())
 
     foundPersonsID = set()
+
     def onNewFace(self):
         return 0
+
     def openNewUserDialog(self):
         self.master.stopCap()
         self.master_.unbind("<Configure>")
@@ -87,10 +92,10 @@ class App(ctk.CTkFrame):
         super().__init__(master=master)
         self.cam_h = master.height
         self.cam_w = master.width
-
+        master.title("Face-Mark : Attendance Perfected")
         self.master_ = master
         master.bind("<Configure>", self.on_resize)
-        
+
         master.protocol("WM_DELETE_WINDOW", self.stopThread)
         # self.title("Abhay")
 
@@ -117,10 +122,9 @@ class App(ctk.CTkFrame):
         setData(self._dict)
         self.process = Process(target=identifyFaces, args=(self._dict,))
 
-        self.mainFrame.label.bind("<Button-1>", lambda *args : self.initCamera())
+        self.mainFrame.label.bind("<Button-1>", lambda *args: self.initCamera())
         self.rightFrame.reportButton.configure(command=self.save_report)
         # self.after(200, self.initCamera)
-
 
     def initCamera(self):
         # self.mainFrame.label.configure(text="Starting Camera ...")
@@ -148,7 +152,7 @@ class App(ctk.CTkFrame):
         # return 0
         ret, frame = self.cap.read()
 
-        self.frameRatio = frame.shape[0]/frame.shape[1]
+        self.frameRatio = frame.shape[0] / frame.shape[1]
         if ret:
             try:
                 frame = cv2.flip(frame, 1)
@@ -157,7 +161,7 @@ class App(ctk.CTkFrame):
 
                 # print(self._dict)
 
-                if(self._dict["frame_processed"]):
+                if (self._dict["frame_processed"]):
                     # print("fg:", self._dict['frame_processed'], "data:", self._dict['data'])
 
                     self._dict["frame"] = frame
@@ -175,7 +179,7 @@ class App(ctk.CTkFrame):
                 (persons, face_locations) = self.lastLocations
 
                 # print(f"Persons:{persons},locs:{face_locations}")
-                if(len(face_locations) > 0):
+                if (len(face_locations) > 0):
                     mainAPI.FaceAPI.drawBox(frame, face_locations, persons)
 
                 image = Image.fromarray(frame)
@@ -203,9 +207,9 @@ class App(ctk.CTkFrame):
 
         # if
         body = ""
-        outputFile = os.path.join(cwd, "reports", getCurrentTime().replace(":", "_")+".txt")
+        outputFile = os.path.join(cwd, "reports", getCurrentTime().replace(":", "_") + ".txt")
         for id in self.foundPersonsID:
-            body += id+" "
+            body += id + " "
         #
         with open(Path(outputFile), "w") as f:
             f.write(body)
@@ -236,5 +240,4 @@ if __name__ == "__main__":
     app = App(root)
     app.show()
 
-    
     root.mainloop()

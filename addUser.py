@@ -1,42 +1,73 @@
 import customtkinter as ctk
 import cv2
 from PIL import Image
+import os
+from pathlib import Path
+from datetime import datetime
 
+cwd = os.sep.join(__file__.split(os.sep)[:-1])
 width, height = 800, 600
+
 
 # face_classifier = cv2.CascadeClassifier(
 #     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 # )
+
+def getCurrentTime():
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    return current_time
+
 
 def process_frame(_frame):
     frame = cv2.flip(_frame, 1)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     return frame
 
+
 class App(ctk.CTkFrame):
     cam_h, cam_w = height, width
     pause = False
     frameActive = False
+
     def onClose(self):
         self.cap.release()
         self.quit()
 
     def saveFrame(self):
-        self.form.saveButton.configure(state='disabled')
-        
         print("Saving Frame")
+        self.form.saveButton.configure(state='disabled')
+
+        id = str(self.form.input_id.get())
+        name = str(self.form.input_name.get())
+
+        if not id or not name:
+            return print(f"id({id}) or name({name}) is invalid !")
+
+        name = name.replace(" ", "_").lower()
+
+        folderName = str(name) + "_" + str(id)
+        folderDest = os.path.join(cwd, "faceAPI", "training", folderName)
+        Path(folderDest).mkdir(exist_ok=True)
+
+        filename = os.path.join(folderDest, getCurrentTime().replace(":", "_") + ".jpg")
+        cv2.imwrite(filename, self.capturedFrame)
+
+        self.form.saveButton.configure(text="Saved")
+        print(f"Frame saved as '{filename}'")
         return 0
 
     def __init__(self, master):
         super().__init__(master)
+
+        master.title("Add USER")
         self.frameActive = True
         self.master = master
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-
-        self.cameraLabel = ctk.CTkLabel(master=self, fg_color="#333aaa")
+        self.cameraLabel = ctk.CTkLabel(master=self, fg_color="transparent")
         self.cameraLabel.grid(row=0, column=0, padx=10, pady=5, sticky='nswe')
 
         self.form = Form(self)
@@ -52,8 +83,10 @@ class App(ctk.CTkFrame):
         self.cap = self.master.getCap()
         print("cap", self.cap)
         self.update()
+
     def show(self):
-        self.grid(row=0,column=0, sticky='nswe')
+        self.grid(row=0, column=0, sticky='nswe')
+
     def captureFrame(self):
         self.pause = not self.pause
 
@@ -63,12 +96,12 @@ class App(ctk.CTkFrame):
 
             return
         else:
-            self.form.captureButton.configure(text="ReCapture")
+            self.form.captureButton.configure(text="New")
         _, frame = self.cap.read()
 
         if _:
             try:
-                self.capturedFrame = process_frame(frame)
+                self.capturedFrame = cv2.flip(frame, 1)
                 id = self.form.input_id.get()
                 name = self.form.input_name.get()
                 print(f"id:{id},name:{name}")
@@ -76,6 +109,8 @@ class App(ctk.CTkFrame):
                 self.form.saveButton.configure(state='normal')
             except Exception as e:
                 print("Error : ", e)
+
+        self.form.saveButton.configure(text="Save")
 
     def update(self):
         if not self.frameActive:
@@ -104,6 +139,7 @@ class App(ctk.CTkFrame):
             self.cameraLabel.destroy()
             self.quit()
 
+
 class Form(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master=master, fg_color="transparent")
@@ -129,11 +165,11 @@ class Form(ctk.CTkFrame):
         self.master.master.stopCap()
         self.master.master.setFrame("camera")
 
+
 if __name__ == "__main__":
-    
     root = ctk.CTk()
-    root.getCap = lambda : cv2.VideoCapture(0)
-    
+    root.getCap = lambda: cv2.VideoCapture(0)
+
     app = App(root)
     root.protocol("WM_DELETE_WINDOW", app.onClose)
     # root.geometry(str(width) + "x" + str(height))
