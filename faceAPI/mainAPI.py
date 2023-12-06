@@ -91,6 +91,7 @@ class FaceAPI:
             savedEncoding = SavedEncoding.getEncodings()
 
         rgb_small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+        # rgb_small_frame = frame
         # rgb_small_frame = small_frame[:, :, ::-1]
         face_locations = face_recognition.face_locations(rgb_small_frame, 2)
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
@@ -108,7 +109,7 @@ class FaceAPI:
             if len(face_distances) == 0:
                 persons.append(person)
                 continue
-            best_match_index = len(face_distances) > 0 if np.argmin(face_distances) else False
+            best_match_index = np.argmin(face_distances)#len(face_distances) > 0 if np.argmin(face_distances) else False
             if best_match_index and matches[best_match_index]:
                 person = savedEncoding["persons"][best_match_index]
 

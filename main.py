@@ -86,7 +86,7 @@ class App(ctk.CTk):
         self.leftFrame.grid(row=0, padx=padx, pady=pady, column=0, sticky="nswe")
         self.rightFrame.grid(row=0, padx=padx, pady=pady, column=2, sticky="nswe")
 
-        self.leftFrame.newUserBtn.configure(command=self.openNewUserDialog)
+        self.leftFrame.addImage.configure(command=self.openNewUserDialog)
         self.bind("<Configure>", self.on_resize)
 
         self.manager = Manager()

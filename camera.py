@@ -74,6 +74,7 @@ class App(ctk.CTkFrame):
     savedPersons = set(mainAPI.SavedEncoding.getPersons())
 
     foundPersonsID = set()
+    lastProcessedFrameAt = time.time()
 
     def onNewFace(self):
         return 0
@@ -114,7 +115,7 @@ class App(ctk.CTkFrame):
         self.leftFrame.grid(row=0, padx=padx, pady=pady, column=0, sticky="nswe")
         self.rightFrame.grid(row=0, padx=padx, pady=pady, column=2, sticky="nswe")
 
-        self.leftFrame.newUserBtn.configure(command=self.openNewUserDialog)
+        self.leftFrame.addImage.configure(command=self.openNewUserDialog)
 
         self.manager = Manager()
         self._dict = self.manager.dict()
@@ -124,7 +125,18 @@ class App(ctk.CTkFrame):
 
         self.mainFrame.label.bind("<Button-1>", lambda *args: self.initCamera())
         self.rightFrame.reportButton.configure(command=self.save_report)
+        self.leftFrame.trainBtn.configure(command=self.train)
         # self.after(200, self.initCamera)
+
+    def _train(self):
+        mainAPI.SavedEncoding.trainModel("hog")
+        self.leftFrame.trainBtn.configure(text="Train", state="normal")
+        mainAPI.SavedEncoding.loadEncoding()
+        self.leftFrame.loadSavedPersons()
+
+    def train(self):
+        self.leftFrame.trainBtn.configure(text="Training ...", state="disabled")
+        self.after(100, self._train)
 
     def initCamera(self):
         # self.mainFrame.label.configure(text="Starting Camera ...")
@@ -132,6 +144,7 @@ class App(ctk.CTkFrame):
         mainAPI.FaceAPI.init()
         self.process.start()
         self.update()
+        self.lastProcessedFrameAt = time.time()
         return 0
 
     def updateFPS(self):
@@ -163,7 +176,8 @@ class App(ctk.CTkFrame):
 
                 if (self._dict["frame_processed"]):
                     # print("fg:", self._dict['frame_processed'], "data:", self._dict['data'])
-
+                    self.lastProcessedFrameAt = time.time()
+                    print("data",self._dict["data"])
                     self._dict["frame"] = frame
                     self.lastLocations = self._dict['data']
                     self._dict["frame_processed"] = False
@@ -175,6 +189,9 @@ class App(ctk.CTkFrame):
                             self.foundPersonsID.add(id)
                             self.rightFrame.userList.addUser(id, name)
 
+                if (time.time() - self.lastProcessedFrameAt) > 3:
+                    self.lastLocations = ([], [])
+                # print("timeFrame", time.time()-self.lastProcessedFrameAt)
                 # (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
                 (persons, face_locations) = self.lastLocations
 
