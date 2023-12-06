@@ -112,6 +112,7 @@ class UserList(ctk.CTkScrollableFrame):
     def addUser(self, id, name):
         newUser = ctk.CTkLabel(master=self, text=str(id) + " " * (4 - len(str(id))) + str(name))
         newUser.grid(row=len(self.userItems) + 1, column=0, sticky='w')
+        self.userItems.append(newUser)
 
     def __init__(self, master, users=set()):
         super().__init__(master, fg_color="transparent")
@@ -128,7 +129,6 @@ class UserList(ctk.CTkScrollableFrame):
             # newUser = ctk.CTkLabel(master=self, text=str(id) + " "*(4-len(str(id))) + str(name))
             # newUser.grid(row=row, column=0, sticky='w')
             self.addUser(id, name)
-            self.userItems.append(newUser)
             row += 1
             print(id, name)
 

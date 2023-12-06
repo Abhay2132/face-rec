@@ -182,6 +182,7 @@ class App(ctk.CTkFrame):
                     self.lastLocations = self._dict['data']
                     self._dict["frame_processed"] = False
                     persons = self.lastLocations[0]
+                    print(persons, self.foundPersonsID)
                     for (id, name) in persons:
                         if id == -1:
                             continue
