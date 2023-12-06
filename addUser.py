@@ -4,40 +4,33 @@ from PIL import Image
 
 width, height = 800, 600
 
-face_classifier = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-)
+# face_classifier = cv2.CascadeClassifier(
+#     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+# )
 
 def process_frame(_frame):
     frame = cv2.flip(_frame, 1)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     return frame
-def add_box(vid):
-    gray_image = cv2.cvtColor(vid, cv2.COLOR_BGR2GRAY)
-    faces = face_classifier.detectMultiScale(gray_image, 1.1, 5, minSize=(100, 100))
-    for (x, y, w, h) in faces:
-        cv2.rectangle(vid, (x, y), (x + w, y + h), (0, 255, 0), 4)
-    # return faces
 
-class App(ctk.CTk):
+class App(ctk.CTkFrame):
     cam_h, cam_w = height, width
     pause = False
-
+    frameActive = False
     def onClose(self):
         self.cap.release()
         self.quit()
 
     def saveFrame(self):
+        self.form.saveButton.configure(state='disabled')
+        
         print("Saving Frame")
         return 0
-    def __init__(self, cap):
-        super().__init__()
 
-        self.cap = cap
-        self.protocol("WM_DELETE_WINDOW", self.onClose)
-
-        self.geometry(str(width) + "x" + str(height))
-        self.title("ADD USER")
+    def __init__(self, master):
+        super().__init__(master)
+        self.frameActive = True
+        self.master = master
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -52,10 +45,25 @@ class App(ctk.CTk):
         self.form.captureButton.configure(command=self.captureFrame)
         self.form.saveButton.configure(command=self.saveFrame)
 
+        self.after(1, self.init)
 
-
+    def init(self):
+        print("asking for videoCapture object from master")
+        self.cap = self.master.getCap()
+        print("cap", self.cap)
+        self.update()
+    def show(self):
+        self.grid(row=0,column=0, sticky='nswe')
     def captureFrame(self):
-        self.pause = True
+        self.pause = not self.pause
+
+        if not self.pause:
+            self.form.captureButton.configure(text="Capture")
+            self.form.saveButton.configure(state='disabled')
+
+            return
+        else:
+            self.form.captureButton.configure(text="ReCapture")
         _, frame = self.cap.read()
 
         if _:
@@ -70,6 +78,9 @@ class App(ctk.CTk):
                 print("Error : ", e)
 
     def update(self):
+        if not self.frameActive:
+            return
+
         if self.pause:
             self.after(1, self.update)
             return
@@ -80,7 +91,7 @@ class App(ctk.CTk):
                 frame = process_frame(_frame)
 
                 # gray_image = cv2.cvtColor(_frame, cv2.COLOR_BGR2GRAY)
-                add_box(frame)
+                # add_box(frame)
                 image = Image.fromarray(frame)
                 image_obj = ctk.CTkImage(image, size=(self.cam_w, int(self.cam_h)))
                 self.cameraLabel.configure(text="", image=image_obj)
@@ -95,22 +106,38 @@ class App(ctk.CTk):
 
 class Form(ctk.CTkFrame):
     def __init__(self, master):
-        super().__init__(master=master, fg_color="#abbaab")
-
+        super().__init__(master=master, fg_color="transparent")
+        self.master = master
         self.input_id = ctk.CTkEntry(master=self, width=30, placeholder_text="ID")
         self.input_id.grid(row=0, column=0, sticky='ns', pady=8, padx=5)
 
         self.input_name = ctk.CTkEntry(master=self, placeholder_text="NAME")
         self.input_name.grid(row=0, column=1, sticky='ns', pady=8, padx=5)
 
-        self.captureButton = ctk.CTkButton(master=self, text="Capture")
+        self.captureButton = ctk.CTkButton(master=self, text="Capture", width=100)
         self.captureButton.grid(row=0, column=2, sticky='e', padx=5, pady=8)
 
-        self.saveButton = ctk.CTkButton(master=self, text='Save', state='disabled')
-        self.saveButton.grid(row=0, column=3, sticky='ns', padx=5, pady=8)
+        self.saveButton = ctk.CTkButton(master=self, text='Save', state='disabled', width=100)
+        self.saveButton.grid(row=0, column=3, sticky='', padx=5, pady=8)
+
+        self.backButton = ctk.CTkButton(master=self, text='Back', width=100, command=self.goBack)
+        self.backButton.grid(row=0, column=4, sticky='', padx=5, pady=8)
+
+    def goBack(self):
+        self.frameActive = False
+
+        self.master.master.stopCap()
+        self.master.master.setFrame("camera")
 
 if __name__ == "__main__":
-    cap = cv2.VideoCapture(0)
-    app = App(cap)
-    app.after(1, app.update)
-    app.mainloop()
+    
+    root = ctk.CTk()
+    root.getCap = lambda : cv2.VideoCapture(0)
+    
+    app = App(root)
+    root.protocol("WM_DELETE_WINDOW", app.onClose)
+    # root.geometry(str(width) + "x" + str(height))
+    root.title("ADD USER")
+
+    app.show()
+    root.mainloop()

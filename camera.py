@@ -7,14 +7,27 @@ import faceAPI.mainAPI
 import ui_
 from PIL import Image
 import cv2
+import os
 from pathlib import Path
 from multiprocessing import Array, Process, Manager
+from datetime import datetime
+
+cwd = os.sep.join(__file__.split(os.sep)[:-1])
+Path(os.path.join(cwd,"reports")).mkdir(exist_ok=True)
+
+# print("Current Time =", current_time)
+def getCurrentTime():
+	now = datetime.now()
+	current_time = now.strftime("%H:%M:%S")
+	return current_time
+
 
 sys.path.append("faceAPI")
 from faceAPI import mainAPI
 
 width, height = 800, 600
 
+cwd = os.sep.join(__file__.split(os.sep)[:-1])
 
 def setData(d):
     d['kill'] = False
@@ -42,7 +55,7 @@ def identifyFaces(_dict):
         _dict['frame_processed'] = True
 
 class App(ctk.CTkFrame):
-    cam_h, cam_w = height, width
+
     lastTime = 0
     lastFpsTick = 0
     data = {"persons": [], "face_locations": []}
@@ -50,14 +63,21 @@ class App(ctk.CTkFrame):
     kill = False
     arr = [0, 0]
     frameRatio = 9/16
+    frameActive = True
 
     # sharedArr = Array('i')
     faceAPIProcess = False
     lastLocations = ([], []) # (persons[], face_locations[])
+    savedPersons = set(mainAPI.SavedEncoding.getPersons())
 
+    foundPersonsID = set()
+    def onNewFace(self):
+        return 0
     def openNewUserDialog(self):
-        self.newUserDialog = addUser.App(self.cap)
-        self.newUserDialog.mainloop()
+        self.master.stopCap()
+        self.master_.unbind("<Configure>")
+        self.master_.onNewUserButtonClicked()
+        self.frameActive = False
 
     def stopThread(self):
         self.kill = True
@@ -65,6 +85,10 @@ class App(ctk.CTkFrame):
 
     def __init__(self, master):
         super().__init__(master=master)
+        self.cam_h = master.height
+        self.cam_w = master.width
+
+        self.master_ = master
         master.bind("<Configure>", self.on_resize)
         
         master.protocol("WM_DELETE_WINDOW", self.stopThread)
@@ -92,13 +116,15 @@ class App(ctk.CTkFrame):
 
         setData(self._dict)
         self.process = Process(target=identifyFaces, args=(self._dict,))
-        self.after(200, self.initCamera)
+
+        self.mainFrame.label.bind("<Button-1>", lambda *args : self.initCamera())
+        self.rightFrame.reportButton.configure(command=self.save_report)
+        # self.after(200, self.initCamera)
 
 
     def initCamera(self):
-        self.cap = cv2.VideoCapture(0)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        # self.mainFrame.label.configure(text="Starting Camera ...")
+        self.cap = self.master_.getCap()
         mainAPI.FaceAPI.init()
         self.process.start()
         self.update()
@@ -117,6 +143,8 @@ class App(ctk.CTkFrame):
         self.updateFPS()
         self.lastTime = time.time()
 
+        if not self.frameActive:
+            return
         # return 0
         ret, frame = self.cap.read()
 
@@ -130,10 +158,18 @@ class App(ctk.CTkFrame):
                 # print(self._dict)
 
                 if(self._dict["frame_processed"]):
-                    print("fg:", self._dict['frame_processed'], "data:", self._dict['data'])
+                    # print("fg:", self._dict['frame_processed'], "data:", self._dict['data'])
+
                     self._dict["frame"] = frame
                     self.lastLocations = self._dict['data']
                     self._dict["frame_processed"] = False
+                    persons = self.lastLocations[0]
+                    for (id, name) in persons:
+                        if id == -1:
+                            continue
+                        if id not in self.foundPersonsID:
+                            self.foundPersonsID.add(id)
+                            self.rightFrame.userList.addUser(id, name)
 
                 # (persons, face_locations) = mainAPI.FaceAPI.identify(frame, mainAPI.SavedEncoding.encodings)
                 (persons, face_locations) = self.lastLocations
@@ -152,10 +188,29 @@ class App(ctk.CTkFrame):
         else:
             self.cap.release()
             self.mainFrame.label.destroy()
-            self.quit()            
+            self.quit()
+
+    def open_popup(self, text="ALERT"):
+        top = ctk.CTkToplevel(self)
+        top.geometry("900x100")
+        top.title("Child Window")
+        ctk.CTkLabel(top, text=text).pack()
 
     def show(self):
         self.grid(row=0, column=0, sticky="nswe")
+
+    def save_report(self):
+
+        # if
+        body = ""
+        outputFile = os.path.join(cwd, "reports", getCurrentTime().replace(":", "_")+".txt")
+        for id in self.foundPersonsID:
+            body += id+" "
+        #
+        with open(Path(outputFile), "w") as f:
+            f.write(body)
+
+        self.open_popup(f"REPORT GENERATED in './Report/{os.path.basename(outputFile)}' Directory")
 
     def on_resize(self, event):
         w = self.mainFrame.winfo_width()

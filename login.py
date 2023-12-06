@@ -26,10 +26,14 @@ class Login(ctk.CTkFrame):
 
         self.userInput = ctk.CTkEntry(master=self, placeholder_text="Username", width=300)
         self.userInput.grid(row=1, column=0, sticky='we', padx=50, pady=10)
-        
+
+
         self.keyInput = ctk.CTkEntry(master=self, placeholder_text="Password", show="*")
         self.keyInput.grid(row=2, column=0, sticky='we', padx=50, pady=0)
-        
+
+        self.userInput.insert(0,"Abhay")
+        self.keyInput.insert(0,"India")
+
         self.submit = ctk.CTkButton(master=self, text='LOGIN', command=self.onSubmit)
         self.submit.grid(row=3, column=0, sticky='ns', padx=10, pady=10)
 
@@ -40,7 +44,7 @@ class Login(ctk.CTkFrame):
         user = self.userInput.get()
         key = self.keyInput.get()
 
-        print(f"user:'{user}',key:'{key}'")
+        # print(f"user:'{user}',key:'{key}'")
 
         if user == "Abhay" and key == "India":
             self._master.onLogin()

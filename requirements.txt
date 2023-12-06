@@ -6,3 +6,4 @@ customtkinter
 packaging
 opencv-python
 customtkinter
+pyinstaller

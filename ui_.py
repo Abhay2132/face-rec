@@ -1,7 +1,6 @@
 import customtkinter as ctk
 from faceAPI import mainAPI
 
-
 # import cv2
 # import customtkinter as ctk
 # cap = cv2.VideoCapture(0)
@@ -13,7 +12,7 @@ class MainFrame(ctk.CTkFrame):
 		self.grid_columnconfigure(0, minsize=150, weight=1)
 		self.grid_rowconfigure(0, minsize=150, weight=1)
 
-		self.label = ctk.CTkLabel(master=self, text="Starting Camera ...", corner_radius=10, text_color="#ffffff",
+		self.label = ctk.CTkLabel(master=self, text="Click to Start Camera", corner_radius=10, text_color="#ffffff",
 								  fg_color="#333333")
 		self.label.grid(pady=10, padx=5, row=0, column=0, sticky="we")
 
@@ -40,8 +39,11 @@ class LeftFrame(ctk.CTkFrame):
 		self.searchBar = SearchBar(master=self)
 		self.searchBar.grid(row=2, column=0, sticky="we")
 
-		# List of Saved Users
-		self.userList = UserList(master=self)
+		# list of saved user data
+		userListData = set(mainAPI.SavedEncoding.getPersons())
+
+		# List of Saved Users Element
+		self.userList = UserList(self, userListData)
 		self.userList.grid(row=3, column=0, sticky="ns")
 
 		self.newUserBtn = ctk.CTkButton(master=self, text="Add New User")
@@ -50,9 +52,25 @@ class LeftFrame(ctk.CTkFrame):
 class RightFrame(ctk.CTkFrame):
 	def __init__(self, master):
 		super().__init__(master)
+		#
+		# self.button = ctk.CTkButton(master=self, text="right frame")
+		# self.button.grid(row=0, column=0, sticky="e")
+		self.grid_columnconfigure(0, weight=1)
 
-		self.button = ctk.CTkButton(master=self, text="right frame")
-		self.button.grid(row=0, column=0, sticky="e")
+		self.grid_rowconfigure(2, weight=1)
+		self.label = ctk.CTkLabel(master=self, text="Attendance List")
+		self.label.grid(row=0, column=0, sticky="w", padx=10)
+
+		ctk.CTkFrame(master=self, height=2, fg_color=("#eee", "#333")).grid(row=1, column=0, sticky="we")
+
+		self.userList = UserList(self)
+		self.userList.grid(row=2, column=0, sticky="ns")
+
+		self.reportButton = ctk.CTkButton(master=self, text="Get Report")
+		self.reportButton.grid(row=3, column=0, sticky='we', padx=20)
+
+		# horizontal line after topbar
+		ctk.CTkFrame(master=self, height=2, fg_color=("#eee", "#333")).grid(row=1, column=0, sticky="we")
 
 
 class SearchBar(ctk.CTkFrame):
@@ -73,10 +91,14 @@ class UserList(ctk.CTkScrollableFrame):
 	users = {(2, "ABHAY"), (3, 'Saurabh')}
 	userItems = []
 
-	def __init__(self, master):
+	def addUser(self, id, name):
+		newUser = ctk.CTkLabel(master=self, text=str(id) + " " * (4 - len(str(id))) + str(name))
+		newUser.grid(row=len(self.userItems)+1, column=0, sticky='w')
+
+	def __init__(self, master, users=set()):
 		super().__init__(master, fg_color="transparent")
 
-		self.users = set(mainAPI.SavedEncoding.getPersons())
+		self.users = users
 		self.grid_rowconfigure(0, weight=1)
 
 		# list heading
@@ -85,8 +107,9 @@ class UserList(ctk.CTkScrollableFrame):
 
 		row = 1
 		for (id, name) in self.users:
-			newUser = ctk.CTkLabel(master=self, text=str(id) + " "*(4-len(str(id))) + str(name))
-			newUser.grid(row=row, column=0, sticky='w')
+			# newUser = ctk.CTkLabel(master=self, text=str(id) + " "*(4-len(str(id))) + str(name))
+			# newUser.grid(row=row, column=0, sticky='w')
+			self.addUser(id, name)
 			self.userItems.append(newUser)
 			row += 1
 			print(id, name)
@@ -95,16 +118,8 @@ class UserList(ctk.CTkScrollableFrame):
 class UserItem(ctk.CTkFrame):
 	def __init__(self, master, id, name, row):
 		super().__init__(master, fg_color="transparent", height=40)
-		# self.grid_columnconfigure(0, weight=1)
-		# self.grid_columnconfigure(1, weight=1)
-		self.grid_rowconfigure(0, weight=1)
-		#
-		# self.idLabel = ctk.CTkLabel(master=self, text=str(id))
-		# self.idLabel.grid(row=0, column=0, sticky="w")
-		#
-		# self.nameLabel = ctk.CTkLabel(master=self, text=str(name))
-		# self.nameLabel.grid(row=0, column=1)
 
+		self.grid_rowconfigure(0, weight=1)
 		self.label = ctk.CTkLabel(master=self, text=str(id) + ".) " + str(name), fg_color="#cccccc")
 		self.label.grid(row=0, column=0, sticky="we")
 
